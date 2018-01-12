@@ -35,7 +35,7 @@ mailbox listing request. The cursor is the last seen message ID. This means that
 in the mailbox the request accesses, the longer the request will take, with a worst case of
 `log N`. 
 
-Although requests of this nature faster to keep an iterator around between requests, the implementation would become
+Although requests of this nature would be faster if we kept an iterator around between requests, the implementation would become
 complicated in a couple of ways:
 
 1. modification to the mailbox would need to cause iterators to become invalid
@@ -46,19 +46,20 @@ only look at the top page of their inbox.
 
 ### unique email addresses
 
-There are a few strategies for generating "random" (but unique) email addresses. For the initial
-implementation, I went with strategy #1
+There are a few strategies for generating "random" (but unique) email addresses. For now, I went with 
+strategy #1. Strategy #3 is more robust. To see if it is acceptable, I'd try it out and see whether it 
+is an issue during stress tests.
 
 strategy 1:
 - use a monotomically increasing counter and append it to some name
 - pro: guaranteed unique, very fast, no locking, no contention
-- con: easy to guess
+- con: not actually random, and easy to guess
 
 strategy 2:
 - use system nano time
 - pro: should be fast and non-blocking
 - con: relying on guarantee that no two things are created in the same nanosecond (pretty unlikely, but possible)
-- con: easier to guess than random
+- con: harder to guess than a sequence number, but still guessable and not random
 
 strategy 3:
 - use a UUID
