@@ -29,7 +29,7 @@ to troubles down the road as the functionality evolves.
 
 A more flexible implementation would have one or more indexes on the mailbox.
 
-For the `TreeMap`, lookups are `O(log N)`, which means that deletions and pagination will not
+For the `TreeMap`, lookups are `O(log N)`, which means that lookups, deletions and pagination will not
 take constant time. The approach to pagination is to send a cursor in the response body of the
 mailbox listing request. The cursor is the last seen message ID. This means that the farther down
 in the mailbox the request accesses, the longer the request will take, with a worst case of
