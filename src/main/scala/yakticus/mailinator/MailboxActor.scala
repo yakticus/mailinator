@@ -39,7 +39,7 @@ object MailboxActor {
  *                 purposes)
  */
 class MailboxActor(
-  defaultPageSize: Int,
+    defaultPageSize: Int,
     timeInNs: () => Long
 ) extends Actor with ActorLogging {
   import MailboxActor._
@@ -70,7 +70,7 @@ class MailboxActor(
       // which would hurt performance with concurrent requests
       val id = timestampNs.toString
       // convert timestamp to seconds
-      val timestampSec = timestampNs / 1000000
+      val timestampSec = timestampNs / 1000000000
       val message = Message(MessageSummary(id, from, subject, timestampSec), body)
       mailbox += (id -> message)
     case GetMessageListing(maybeCursor, maybeSize) =>

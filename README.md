@@ -20,6 +20,30 @@ responds directly to the flow that originally made the request.
 
 ## notes on some design decisions
 
+### mailbox data structure & pagination
+
+The mailbox itself is stored in a `TreeMap`, which is backed by a B-tree implementation.
+The message ID serves both as a primary key and an index by timestamp. This has the advantage of being simple,
+but the disadvantage that there are assumptions baked into the message ID, which will most likely lead
+to troubles down the road as the functionality evolves.
+
+A more flexible implementation would have one or more indexes on the mailbox.
+
+For the `TreeMap`, lookups are `O(log N)`, which means that deletions and pagination will not
+take constant time. The approach to pagination is to send a cursor in the response body of the
+mailbox listing request. The cursor is the last seen message ID. This means that the farther down
+in the mailbox the request accesses, the longer the request will take, with a worst case of
+`log N`. 
+
+Although requests of this nature faster to keep an iterator around between requests, the implementation would become
+complicated in a couple of ways:
+
+1. modification to the mailbox would need to cause iterators to become invalid
+2. iterators would need to have a TTL so as to avoid keeping ones around that are not being used
+
+Furthermore, the access pattern would be unlikely to warrant such a complication, as most people usually
+only look at the top page of their inbox. 
+
 ### unique email addresses
 
 There are a few strategies for generating "random" (but unique) email addresses. For the initial
