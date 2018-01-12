@@ -7,9 +7,9 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.pattern.ask
 import org.scalacheck._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{Matchers, WordSpec}
-import yakticus.mailinator.EmailRegistryActor.{CreateEmail, MailboxMessage}
-import yakticus.mailinator.MailboxActor.{CreateMessage, Message, MessageListing, MessageSummary}
+import org.scalatest.{ Matchers, WordSpec }
+import yakticus.mailinator.EmailRegistryActor.{ CreateEmail, MailboxMessage }
+import yakticus.mailinator.MailboxActor.{ CreateMessage, Message, MessageListing, MessageSummary }
 
 import scala.concurrent.Future
 
@@ -71,7 +71,7 @@ class EmailApiRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
       val request = HttpRequest(uri = "/mailboxes/dummy@example.com/messages")
 
       request ~> routes ~> check {
-        status should === (StatusCodes.NotFound)
+        status should ===(StatusCodes.NotFound)
       }
     }
 
@@ -80,14 +80,14 @@ class EmailApiRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
       val request = HttpRequest(uri = "/mailboxes", method = HttpMethods.POST)
 
       request ~> routes ~> check {
-        status should === (StatusCodes.Created)
+        status should ===(StatusCodes.Created)
 
         // we expect the response to be json:
-        contentType should === (ContentTypes.`application/json`)
+        contentType should ===(ContentTypes.`application/json`)
 
         // there should be some email address in there
         val body = entityAs[String]
-        body should startWith ("""{"address":""")
+        body should startWith("""{"address":""")
       }
     }
 
@@ -96,11 +96,11 @@ class EmailApiRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
         address =>
           val getListing = HttpRequest(uri = s"/mailboxes/${address.address}/messages")
           getListing ~> routes ~> check {
-            status should === (StatusCodes.OK)
+            status should ===(StatusCodes.OK)
             val listing = entityAs[MessageListing]
-            listing.cursor should be (empty)
-            listing.messages should be (empty)
-        }
+            listing.cursor should be(empty)
+            listing.messages should be(empty)
+          }
       }
     }
 
@@ -109,10 +109,10 @@ class EmailApiRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
         address =>
           val deleteMailbox = HttpRequest(uri = s"/mailboxes/${address.address}", method = HttpMethods.DELETE)
           deleteMailbox ~> routes ~> check {
-            status should === (StatusCodes.OK)
+            status should ===(StatusCodes.OK)
             val getListing = HttpRequest(uri = s"/mailboxes/${address.address}/messages")
             getListing ~> routes ~> check {
-              status should === (StatusCodes.NotFound)
+              status should ===(StatusCodes.NotFound)
             }
           }
       }
@@ -127,10 +127,10 @@ class EmailApiRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
           // when ALL messages are created, then check that we can retrieve the message listing
           val getListing = Get(s"/mailboxes/${address.address}/messages?size=$pageSize")
           getListing ~> routes ~> check {
-            status should be (StatusCodes.OK)
+            status should be(StatusCodes.OK)
             val listing = entityAs[MessageListing]
-            listing.messages.size should be (mailboxSize)
-            listing.cursor should be (empty)
+            listing.messages.size should be(mailboxSize)
+            listing.cursor should be(empty)
             // confirm that each message is older than the last
             assertMessageRecencyOrder(listing.messages)
           }
@@ -145,21 +145,21 @@ class EmailApiRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
           val getUri = s"/mailboxes/${address.address}/messages?size=$pageSize"
 
           Get(getUri) ~> routes ~> check {
-            status should be (StatusCodes.OK)
+            status should be(StatusCodes.OK)
             val firstListing = entityAs[MessageListing]
-            firstListing.messages.size should be (pageSize)
+            firstListing.messages.size should be(pageSize)
             firstListing.cursor should not be empty
 
             Get(getUri + s"&cursor=${firstListing.cursor}") ~> routes ~> check {
-              status should be (StatusCodes.OK)
+              status should be(StatusCodes.OK)
               val nextListing = entityAs[MessageListing]
-              nextListing.messages.size should be (pageSize)
+              nextListing.messages.size should be(pageSize)
               nextListing.cursor should not be empty
               // test for uniqueness
               val bothPages = firstListing.messages ++ nextListing.messages
               assertMessageRecencyOrder(bothPages)
               val allIds = bothPages.map(_.id)
-              allIds.size should equal (allIds.toSet.size)
+              allIds.size should equal(allIds.toSet.size)
             }
           }
       }
@@ -175,20 +175,32 @@ class EmailApiRoutesSpec extends WordSpec with Matchers with ScalaFutures with S
           Get(getUri + s"?size=$pageSize") ~> routes ~> check {
             status should be(StatusCodes.OK)
             val listing = entityAs[MessageListing]
-            listing.messages.size should be (pageSize)
-            val summary = listing.messages(pageSize/2)
+            listing.messages.size should be(pageSize)
+            val summary = listing.messages(pageSize / 2)
             // the message selected should be one from the original list
             val originalRequest = createMessageRequests.find(_.subject == summary.subject)
             originalRequest should not be empty
 
             Get(getUri + s"/${summary.id}") ~> routes ~> check {
-              status should be (StatusCodes.OK)
+              status should be(StatusCodes.OK)
               val message = entityAs[Message]
-              message.body should be (originalRequest.get.body)
-              message.summary.from should be (originalRequest.get.from)
+              message.body should be(originalRequest.get.body)
+              message.summary.from should be(originalRequest.get.from)
             }
           }
       }
     }
+
+    "try and fail to get non-existent message" in {
+      doOnNewMailboxOfSize(5) {
+        case (address, _) =>
+          val getUri = s"/mailboxes/${address.address}/messages/some_bogus_id"
+          Get(getUri) ~> routes ~> check {
+            status should ===(StatusCodes.NotFound)
+          }
+
+      }
+    }
+
   }
 }

@@ -1,39 +1,39 @@
 package yakticus.mailinator
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props, Terminated }
 
 final case class Address(address: String)
 
 /**
-  * Contains message objects to send to the actor, plus factory method for it
-  */
+ * Contains message objects to send to the actor, plus factory method for it
+ */
 object EmailRegistryActor {
   /**
-    * Create a new, random email address
-    */
+   * Create a new, random email address
+   */
   case object CreateEmail
 
   /**
-    * Delete a specific email address and any associated messages
-    *
-    * @param address the address to delete
-    */
+   * Delete a specific email address and any associated messages
+   *
+   * @param address the address to delete
+   */
   case class DeleteEmail(address: Address)
   /**
-    * generic response when an email deleted request is sent
-    */
+   * generic response when an email deleted request is sent
+   */
   case object EmailDeleted
 
   /**
-    *
-    * any message to be forwarded to a specific mailbox
-    * @param mailbox the address of the mailbox to send the message to
-    * @param message the message to send
-    */
+   *
+   * any message to be forwarded to a specific mailbox
+   * @param mailbox the address of the mailbox to send the message to
+   * @param message the message to send
+   */
   case class MailboxMessage(mailbox: Address, message: Any)
   /**
-    * Respond with this if a MailboxMessage is received but no corresponding mailbox is found
-    */
+   * Respond with this if a MailboxMessage is received but no corresponding mailbox is found
+   */
   case object NoSuchMailbox
 
   def props(domain: String): Props = Props(classOf[EmailRegistryActor], domain)
@@ -41,18 +41,18 @@ object EmailRegistryActor {
 }
 
 /**
-  * Registry of all mailboxes. Doubles as supervisor for mailbox actors.
-  *
-  * @param domain the suffix for email addresses (e.g., @mailinator.com)
-  */
+ * Registry of all mailboxes. Doubles as supervisor for mailbox actors.
+ *
+ * @param domain the suffix for email addresses (e.g., @mailinator.com)
+ */
 class EmailRegistryActor(domain: String) extends Actor with ActorLogging {
   import EmailRegistryActor._
 
   var mailboxActors = Map.empty[Address, ActorRef]
 
   /**
-    * Increment each time a new mailbox is created. It is the unique part of the email address
-    */
+   * Increment each time a new mailbox is created. It is the unique part of the email address
+   */
   var mailboxCounter = 0l
 
   private def forward(to: Address, message: Any): Unit = {

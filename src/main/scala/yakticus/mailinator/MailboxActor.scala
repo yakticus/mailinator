@@ -1,6 +1,6 @@
 package yakticus.mailinator
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{ Actor, ActorLogging, Props }
 
 import scala.collection.immutable.TreeMap
 
@@ -31,15 +31,17 @@ object MailboxActor {
 }
 
 /**
-  * Manages the mailbox for a single email address
-  *
-  * @param defaultPageSize number of messages to return in a single of response, unless otherwise specified
-  *                        in the request
-  * @param timeInNs function to get current time in nanoseconds (can be injected as a mock clock for testing
-  *                 purposes)
-  */
-class MailboxActor(defaultPageSize: Int,
-                   timeInNs: () => Long) extends Actor with ActorLogging {
+ * Manages the mailbox for a single email address
+ *
+ * @param defaultPageSize number of messages to return in a single of response, unless otherwise specified
+ *                        in the request
+ * @param timeInNs function to get current time in nanoseconds (can be injected as a mock clock for testing
+ *                 purposes)
+ */
+class MailboxActor(
+  defaultPageSize: Int,
+    timeInNs: () => Long
+) extends Actor with ActorLogging {
   import MailboxActor._
   require(defaultPageSize > 0, s"expected page size > 0; was: $defaultPageSize")
 

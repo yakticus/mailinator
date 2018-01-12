@@ -16,16 +16,16 @@ import yakticus.mailinator.MailboxActor._
 import scala.concurrent.duration._
 
 /**
-  * Contains the routes for the HTTP server. Namely:
-  *
-  * POST /mailboxes: Create a new, random email address.
-  * POST /mailboxes/{email address}/messages: Create a new message for a specific email address.
-  * GET /mailboxes/{email address}/messages: Retrieve an index of messages sent to an email address, including sender,
-  *     subject, and id, in recency order. Support cursor-based pagination through the index.
-  * GET /mailboxes/{email address}/messages/{message id}: Retrieve a specific message by id.
-  * DELETE /mailboxes/{email address}: Delete a specific email address and any associated messages.
-  * DELETE /mailboxes/{email address}/messages/{message id}: Delete a specific message by id.
-  */
+ * Contains the routes for the HTTP server. Namely:
+ *
+ * POST /mailboxes: Create a new, random email address.
+ * POST /mailboxes/{email address}/messages: Create a new message for a specific email address.
+ * GET /mailboxes/{email address}/messages: Retrieve an index of messages sent to an email address, including sender,
+ *     subject, and id, in recency order. Support cursor-based pagination through the index.
+ * GET /mailboxes/{email address}/messages/{message id}: Retrieve a specific message by id.
+ * DELETE /mailboxes/{email address}: Delete a specific email address and any associated messages.
+ * DELETE /mailboxes/{email address}/messages/{message id}: Delete a specific message by id.
+ */
 trait EmailApiRoutes extends JsonSupport {
 
   implicit def system: ActorSystem
@@ -40,8 +40,8 @@ trait EmailApiRoutes extends JsonSupport {
   implicit lazy val timeout: Timeout = Timeout(5.seconds)
 
   /**
-    * The routes for the entire server. Breaks down into individual routes per request
-    */
+   * The routes for the entire server. Breaks down into individual routes per request
+   */
   lazy val userRoutes: Route =
     pathPrefix("mailboxes") {
       pathEnd {
@@ -58,19 +58,18 @@ trait EmailApiRoutes extends JsonSupport {
                   createMessage(address) ~
                   path(Segment) {
                     messageId =>
-                        getMessage(address, messageId) ~
-                          deleteMessage(address, messageId)
+                      getMessage(address, messageId) ~
+                        deleteMessage(address, messageId)
                   }
               }
             }
         }
     }
 
-
   /**
-    * Implements the route
-    * POST /mailboxes: Create a new, random email address
-    */
+   * Implements the route
+   * POST /mailboxes: Create a new, random email address
+   */
   val createMailbox: Route = post {
     // make new email user
     val userCreated = (emailRegistryActor ? CreateEmail).mapTo[Address]
@@ -82,12 +81,12 @@ trait EmailApiRoutes extends JsonSupport {
   }
 
   /**
-    * Implements the route
-    * DELETE /mailboxes/{email address}: Delete a specific email address and any associated messages
-    *
-    * @param address the address of the mailbox to delete
-    * @return the route to delete the mailbox
-    */
+   * Implements the route
+   * DELETE /mailboxes/{email address}: Delete a specific email address and any associated messages
+   *
+   * @param address the address of the mailbox to delete
+   * @return the route to delete the mailbox
+   */
   def deleteMailbox(address: Address): Route = //
     delete {
       val emailDeleted = (emailRegistryActor ? DeleteEmail(address)).mapTo[EmailDeleted.type]
@@ -97,14 +96,14 @@ trait EmailApiRoutes extends JsonSupport {
       }
     }
   /**
-    * Implements the route
-    * GET /mailboxes/{email address}/messages: Retrieve an index of messages sent to an email address,
-    * including sender, subject, and id, in recency order.
-    *
-    * Supports cursor-based pagination through the index.
-    * @param address the address to get the mailbox listing for
-    * @return the route to get the listing for the mailbox
-    */
+   * Implements the route
+   * GET /mailboxes/{email address}/messages: Retrieve an index of messages sent to an email address,
+   * including sender, subject, and id, in recency order.
+   *
+   * Supports cursor-based pagination through the index.
+   * @param address the address to get the mailbox listing for
+   * @return the route to get the listing for the mailbox
+   */
   def getMessageListing(address: Address): Route =
     get {
       parameters('cursor.?, 'size.?) {
@@ -120,33 +119,33 @@ trait EmailApiRoutes extends JsonSupport {
       }
     }
   /**
-    * Implements the route
-    * POST /mailboxes/{email address}/messages: Create a new message for a specific email address
-    *
-    * @param address the recipient of the message
-    * @return the route to create the message
-    */
+   * Implements the route
+   * POST /mailboxes/{email address}/messages: Create a new message for a specific email address
+   *
+   * @param address the recipient of the message
+   * @return the route to create the message
+   */
   def createMessage(address: Address): Route = post {
-      entity(as[CreateMessage]) {
-        newEmail =>
-          val actorMessage = MailboxMessage(address, newEmail)
-          onSuccess(emailRegistryActor ? actorMessage) {
-            case created: MessageCreated =>
-              complete(StatusCodes.Created, created)
-            case NoSuchMailbox =>
-              complete(StatusCodes.NotFound)
-          }
-      }
+    entity(as[CreateMessage]) {
+      newEmail =>
+        val actorMessage = MailboxMessage(address, newEmail)
+        onSuccess(emailRegistryActor ? actorMessage) {
+          case created: MessageCreated =>
+            complete(StatusCodes.Created, created)
+          case NoSuchMailbox =>
+            complete(StatusCodes.NotFound)
+        }
     }
+  }
 
   /**
-    * Implements the route
-    * GET /mailboxes/{email address}/messages/{message id}: Retrieve a specific message by id
-    *
-    * @param address address to get message for
-    * @param id ID to get message for
-    * @return the route to get the message
-    */
+   * Implements the route
+   * GET /mailboxes/{email address}/messages/{message id}: Retrieve a specific message by id
+   *
+   * @param address address to get message for
+   * @param id ID to get message for
+   * @return the route to get the message
+   */
   def getMessage(address: Address, id: String): Route = get {
     // GET /mailboxes/{email address}/messages/{message id}: Retrieve a specific message by id
     val actorMessage = MailboxMessage(address, GetMessage(id))
@@ -161,13 +160,13 @@ trait EmailApiRoutes extends JsonSupport {
   }
 
   /**
-    * Implements the route
-    * DELETE /mailboxes/{email address}/messages/{message id}: Delete a specific message by id
-    *
-    * @param address the address to delete message for
-    * @param id the ID of the message to delete
-    * @return the route to delete the message
-    */
+   * Implements the route
+   * DELETE /mailboxes/{email address}/messages/{message id}: Delete a specific message by id
+   *
+   * @param address the address to delete message for
+   * @param id the ID of the message to delete
+   * @return the route to delete the message
+   */
   def deleteMessage(address: Address, id: String): Route = delete {
     //
     val actorMessage = MailboxMessage(address, DeleteMessage(id))

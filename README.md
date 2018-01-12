@@ -3,6 +3,11 @@
 ```$bash
 $ sbt run
 ```
+## to test
+
+```$bash
+$ sbt test
+```
 
 ## basic design
 
@@ -59,6 +64,7 @@ to virtually guarantee uniqueness for the age of the universe.
 * correctness tests
     * paging through a mailbox while it is being updated
     * any way to kill a mailbox actor accidentally?
+    * try to make the server crash -- made-up endpoints, wacky-looking requests, etc.
 * stress tests
     * lots of mailboxes
     * lots of messages in mailboxes
