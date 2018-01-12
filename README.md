@@ -11,9 +11,9 @@ $ sbt test
 
 ## basic design
 
-The server is built on top of akka and akka-http. Requests are dispatched through the akka-http routing DSL and are
-then handed-off to an actor, `EmailRegistryActor` which holds a registry of known mailboxes. Each mailbox is owned
-by an actor of type `MailboxActor`, which is a child of the registry actor. 
+The server is built on top of akka and akka-http. Requests are dispatched through the akka-http routing DSL 
+(via `EmailApiRoutes`) and are then handed-off to an actor, `EmailRegistryActor` which holds a registry of known 
+mailboxes. Each mailbox is owned by an actor of type `MailboxActor`, which is a child of the registry actor. 
 
 Mailbox-specific requests are forwarded by `EmailRegistryActor` directly to the appropriate `MailboxActor`, which
 responds directly to the flow that originally made the request.
